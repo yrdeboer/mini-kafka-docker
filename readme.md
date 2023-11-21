@@ -1,6 +1,8 @@
 ### Introduction
 This is a mini-project to refresh my memory about Docker and Kafka.
 
+Used Docker images are available in the Docker Hub.
+
 Following the steps below a Kafka cluster is set up.
 A topic is added.
 
