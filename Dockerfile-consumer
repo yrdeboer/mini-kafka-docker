@@ -1,0 +1,10 @@
+FROM python:3.8
+
+RUN python3.8 -m pip install pymysql cryptography
+RUN python3.8 -m pip install kafka-python
+
+COPY consumer.py .
+
+CMD python3 ./consumer.py
+
+
