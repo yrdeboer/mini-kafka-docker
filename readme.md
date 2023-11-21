@@ -17,7 +17,7 @@ docker build -t consumer -f Dockerfile-consumer .
 docker run -d --name mysql-container -e MYSQL_ROOT_PASSWORD=r00tpa55 -e MYSQL_DATABASE=items -e MYSQL_USER=user1 -e MYSQL_PASSWORD=mypa55  -p 30306:3306 mysql
 
 ### Start consumer container linked with mysql container
-docker run -d --name consumer-container -e HOST_IP=`hostname -I | awk '{ print $1 }'` --link mysql-container:mysql  consumer
+docker run -d --name consumer-container -e HOST_IP=\`hostname -I | awk '{ print $1 }'\` --link mysql-container:mysql  consumer
 
 ### Follow consumer logs to see when connection is up
 docker logs -f consumer-container
