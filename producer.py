@@ -9,6 +9,17 @@ TOPIC_NAME = 'MyPriceData'
 
 def main():
 
+    """
+    This producer registers as a Kafka producer to the
+    Kafka setup.
+
+    It then starts generating "price data" at random intervals.
+
+    These will be sent to the Kafka cluster.
+
+    After some fixed number of messages, it will exit.
+    """
+
     producer = KafkaProducer(
         bootstrap_servers=[
             'localhost:9090',
