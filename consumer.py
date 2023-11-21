@@ -17,6 +17,19 @@ logger.setLevel(logging.INFO)
 
 def get_db_conn():
 
+    """
+    Attempts to setup a MySQL DB connection using
+    environment variables from the docker link.
+
+    In case there was an exception, it is assumed
+    that the mysql DB is just not ready yet (but will
+    be soon-ish).
+
+    Returns the pymysql DB connection object on success.
+    """
+
+    db_conn = None
+
     while True:
         try:
             logger.info('Attempting to connect to DB')
@@ -40,6 +53,16 @@ def get_db_conn():
 
 
 def split_and_execute(cur, sql):
+
+    """
+    This utility function splits a string of
+    possibly lots of SQL statements and
+    executes them one by one on the cursor.
+
+    May re-raise on odd exceptions (check logs).
+
+    Returns nothing.
+    """
 
     for s in sql.split(';'):
 
@@ -78,20 +101,15 @@ def split_and_execute(cur, sql):
 
 def execute_tenaciously_sql(sql, db_conn, max_attempt_count=None):
     """
-    This function will try to execute a (select)
-    SQL query on the DB connection.
-
-    If an "operational" error occurs, it will try
-    to reconnect.
-
-    If this fails, a CRITICAL log message will
-    be issued and the process will go to sleep
-    asynchronously and then try again indefinitely.
+    This function attempts to execute one or more SQL
+    queries. Logs exceptions but may re-raise.
 
     Args:
-      sql:     A string containing a sql query.
-      db_conn: A DB connection through which
-               to execute the SQL query.
+      sql:                  A string containing a sql query.
+      db_conn:              A DB connection through which
+                            to execute the SQL query.
+      max_attempt_count:    Will not attempt to execute the
+                            query more times than this number.
 
     Returns:
       A tuple containing a tuple per row, resulting
@@ -104,7 +122,6 @@ def execute_tenaciously_sql(sql, db_conn, max_attempt_count=None):
     result = None
     attempt_count = 0
 
-    # Breaking out when result is received
     while True:
 
         attempt_count += 1
@@ -137,6 +154,12 @@ def execute_tenaciously_sql(sql, db_conn, max_attempt_count=None):
 
 def init_price_data_table(db_conn):
 
+    """
+    Will create a price data table. It may not yet
+    exist as no persistent storage may be used
+    used (yet).
+    """
+
     sql = 'CREATE TABLE '
     sql += '`price_data` (`id` bigint not null auto_increment, '
     sql += '`market_name` varchar(45) ,  `close` double, '
@@ -152,16 +175,60 @@ def init_price_data_table(db_conn):
 
 
 def deserialise_key(key):
+
+    """
+    Deserialises the key for a record, which is bytes,
+    into a string. The key is the market name
+    and it is further processed as a string type.
+
+    Args:
+      key:   Bytes, the market name
+
+    Returns:
+      String, the decoded (from bytes) key.
+    """
+
     logger.debug('key: {}'.format(key))
     return key.decode()
 
 
 def deserialise_value(value):
+
+    """
+    Deserialises the value for a record,
+    which is bytes, into a float number.
+    The value is the last
+    price for the market (the key).
+
+    Args:
+      value:   Bytes, the last price for a market
+
+    Returns:
+      float, the decoded (from bytes) key.
+    """
+
     logger.debug('value: {}'.format(value))
     return float(value)
 
 
 def consume(db_conn):
+
+    """
+    This function sets up a Kafka consumer, using
+    environment variables (as this is supposed to run
+    in a Docker container).
+
+    It inserts the received price updates into
+    a MySQL database.
+
+    It will exit after some fixed number of polls.
+
+    Args:
+      db_conn:   pymysql connection to a MySQL database.
+
+    Returns:
+      Nothing.
+    """
 
     host_ip = os.environ.get('HOST_IP')
     bootstrap_servers = '{}:9090'.format(host_ip)
@@ -186,6 +253,7 @@ def consume(db_conn):
             consumer_id,
             i_cnt,
             max_cnt))
+
         ret = consumer.poll(timeout_ms=5000)
         logger.debug('{} Done polling, got:\n{}'.format(
             consumer_id,
