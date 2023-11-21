@@ -1,3 +1,19 @@
+### Introduction
+This is a mini-project to refresh my memory about Docker and Kafka.
+
+Following the steps below a Kafka cluster is set up.
+A topic is added.
+
+Then a MySQL server Docker image is started and also a Kafka custom consumer,
+written in Python, is started inside a Docker image.
+
+A simple producer then streams data to the Kafka cluster. It mimicks intermittendly
+received bitcoin price data.
+
+The consumer will receive it from the Kafka cluster and insert it into
+the MySQL database.
+
+
 ### Start local zookeeper in background
 ./kafka_2.12-2.6.3/bin/zookeeper-server-start.sh ./kafka_2.12-2.6.3/config/zookeeper.properties   &> out.zookeeper.txt &
 
